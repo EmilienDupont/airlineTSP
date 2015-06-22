@@ -63,38 +63,7 @@ rect {
       <p>Model description goes here.</p>
 
 <!-- We use tex with $ as usual-->
-      <p>Let $V$ be the set of vertices in our graph and $E$ the set of edges.
-      We are interested in computing an <i>edge cover</i>: a set of
-      edges $C$ that cover all vertices in the graph (i.e. so that each vertex
-      in the graph has at least one edge incident on it).
-      </p>
-
-      <p> A minimal edge cover is one that uses the fewest edges. We
-        will compute this with integer programming. </p>
-
-      <p>First we define the variables
-      <!-- Eq in [] -->
-      \[
-      x_e = \left\{\begin{array}{ll}
-             1 & \text{if  $e \in E$ is in the cover}\\
-             0 & \mathrm{otherwise}
-            \end{array}\right.
-      \]
-      </p>
-
-      <p>Then the following model can be solved to obtain a minimal edge cover
-      \[
-      \begin{array}{ll}
-      \text{minimize} & \sum_{e \in E} x_e \\
-      \text{subject to} & \sum_{(u,v)=e \in E} x_e + \sum_{(v,u)=e \in E} x_e \ge 1, \quad \forall v \in V \\
-                        & x_e \in \{ 0, 1 \} \quad \forall e \in E
-      \end{array}
-      \]
-      </p>
-
-      <p>Given an optimal solution $x^\star$ to the above model, we
-      know that an edge $e$ will be in a minimal cover $C^\star$
-      if $x^\star_e = 1$. </p>
+      
 <!-- implementation (gurobi code) -->
     </div>
     <div class="section" id="implementation">
@@ -139,11 +108,12 @@ var yScale = d3.scale.linear()
 var svg = d3.select("#demoarea").append("svg")
     .attr("width", width)
     .attr("height", height)
+    .on("mousedown", mousedown); // mousedown is function defined below whichis executed when you click
 
+//var map = d3.geo.albersUsa();
 
 // Create some data (vertices of the graph here)
 var nodes = [[28,100], [152,190], [400,50]];
-//var links = [ [0, 1] , [2, 1], [0,2] ];
 
 var circles = svg.selectAll("circle") // Select all the circles (that do not yet exist...)
                  .data(nodes) // Iterate over the dataset
@@ -151,18 +121,39 @@ var circles = svg.selectAll("circle") // Select all the circles (that do not yet
                  .append("circle"); // actually add circles
   
   circles.attr("cx", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
-            return xScale(nodes[i][0]); // i.e move x coordinate of center to the right
+            return nodes[i][0]; // i.e move x coordinate of center to the right
             })
             .attr("cy", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
-            return yScale(nodes[i][1]); // i.e move x coordinate of center to the right
+            return nodes[i][1]; // i.e move x coordinate of center to the right
             })
             .attr("r", 5)
             .attr("fill", "black")
             .attr("stroke", "gray")
             .attr("stroke-width", 2);
 
+function mousedown() {
+  var point = d3.mouse(this);
+  console.log(point)
+  nodes.push(point);
+  
+  // Add new point
+  var circles = svg.selectAll("circle") // Select all the circles (that do not yet exist...)
+                 .data(nodes) // Iterate over the dataset
+                 .enter() // create an object
+                 .append("circle"); // actually add circles
+  
+  circles.attr("cx", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
+            return nodes[i][0]; // i.e move x coordinate of center to the right
+            })
+            .attr("cy", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
+            return nodes[i][1]; // i.e move x coordinate of center to the right
+            })
+            .attr("r", 5)
+            .attr("fill", "black")
+            .attr("stroke", "gray")
+            .attr("stroke-width", 2);
+}
 
-// All above lines come from a d3 example (mbostock)
 function compute() {
   var vertices = nodes;
   for (var i = 0; i < nodes.length; i++) {
@@ -179,9 +170,9 @@ function compute() {
 
 function serverResponse(error, data) {
    console.log('serverResponse');
-   console.log('data', data); // Print out data
-   if (!error) { // error = 0 => everything okay
-      if ('tour' in data) { // data is dict, should have a key cover
+   console.log('data', data);
+   if (!error) {
+      if ('tour' in data) {
         var tour = data.tour;
         console.log('tour', tour);
         
@@ -207,24 +198,23 @@ function serverResponse(error, data) {
               .attr("x1", function(d,i) {
                 var node1 = nodes[links[i][0]];
                 var x1 = node1[0]
-                return xScale(x1);
+                return x1;
               })
               .attr("y1", function(d,i) {
                 var node1 = nodes[links[i][0]];
                 var y1 = node1[1]
-                return yScale(y1);
+                return y1;
               })
               .attr("x2", function(d,i) {
                 var node2 = nodes[links[i][1]];
                 var x2 = node2[0]
-                return xScale(x2);
+                return x2;
               })
               .attr("y2", function(d,i) {
                 var node2 = nodes[links[i][1]];
                 var y2 = node2[1]
-                return yScale(y2);
+                return y2;
               })
-        
       }
    }
 }

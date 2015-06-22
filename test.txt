@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!-- Next lines for math/latex -->
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script>
+  MathJax.Hub.Config({
+                      tex2jax: {inlineMath: [['$', '$'], ['\\(','\\)']]},
+                      TeX: { equationNumbers: {autoNumber: "AMS"} },
+                      "HTML-CSS": { showMathMenu: false,
+                                    scale: 90 }
+
+                     });
+</script>
+
+<!-- Next lines for styling (CSS) -->
+<style>
+
+rect {
+  fill: none;
+  pointer-events: all;
+}
+
+.node {
+  fill: #000;
+}
+
+.cursor {
+  fill: none;
+  stroke: brown;
+  pointer-events: none;
+}
+
+.link {
+  stroke: #999;
+}
+
+</style>
+<!-- Next lines html -->
+<body>
+  <!-- Navigation -->
+  <ul id="nav">
+    <li class="current"><a href="#intro">Intro</a></li>
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#model">Model</a></li>
+    <li><a href="#implementation">Implementation</a></li>
+    <li><a href="#demo">Live Demo</a></li>
+  </ul>
+  <!--Set title and write stuff-->
+  <div id="container">
+    <div class="section" id="intro">
+      <h1>Flight Tour</h1>
+        <subtitle>with integer programming and Gurobi</subtitle>
+    </div>
+
+    <div class="section" id="problem">
+      <h2><a href="#problem" name="problem">Problem Description</a></h2>
+      Problem description goes here
+    </div>
+    <div class="section" id="model">
+      <h2><a href="#model" name="model">Mathematical Model</a></h2>
+
+      <p>Model description goes here.</p>
+
+<!-- We use tex with $ as usual-->
+      <p>Let $V$ be the set of vertices in our graph and $E$ the set of edges.
+      We are interested in computing an <i>edge cover</i>: a set of
+      edges $C$ that cover all vertices in the graph (i.e. so that each vertex
+      in the graph has at least one edge incident on it).
+      </p>
+
+      <p> A minimal edge cover is one that uses the fewest edges. We
+        will compute this with integer programming. </p>
+
+      <p>First we define the variables
+      <!-- Eq in [] -->
+      \[
+      x_e = \left\{\begin{array}{ll}
+             1 & \text{if  $e \in E$ is in the cover}\\
+             0 & \mathrm{otherwise}
+            \end{array}\right.
+      \]
+      </p>
+
+      <p>Then the following model can be solved to obtain a minimal edge cover
+      \[
+      \begin{array}{ll}
+      \text{minimize} & \sum_{e \in E} x_e \\
+      \text{subject to} & \sum_{(u,v)=e \in E} x_e + \sum_{(v,u)=e \in E} x_e \ge 1, \quad \forall v \in V \\
+                        & x_e \in \{ 0, 1 \} \quad \forall e \in E
+      \end{array}
+      \]
+      </p>
+
+      <p>Given an optimal solution $x^\star$ to the above model, we
+      know that an edge $e$ will be in a minimal cover $C^\star$
+      if $x^\star_e = 1$. </p>
+<!-- implementation (gurobi code) -->
+    </div>
+    <div class="section" id="implementation">
+      <h2><a href="#implementation" name="implementation">Implementation</a></h2>
+      <p>Below is the full implementation of the model (and the associated data) in
+        Gurobi's Python interface:
+      </p>
+      <pre>
+        from gurobipy import *
+
+        # Change this
+        
+      </pre>
+    </div>
+    <div class="section" id="demo">
+      <h2><a href="#demo" name="demo">Live Demo</a></h2>
+      <!-- Where we put graphics -->
+      <div id="demoarea">
+      </div>
+      <!-- When button is clicked => calls compute() -->
+      <button onclick="compute()">Compute Tour</button>
+    </div>
+
+    <!-- Load d3 library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<!-- After script, javascript -->
+<script>
+
+var width = 960,
+    height = 500;
+
+var fill = d3.scale.category20();
+
+var force = d3.layout.force()
+    .size([width, height])
+    .nodes([{}]) // initialize with a single node
+    .linkDistance(30)
+    .charge(0)
+    .gravity(0) // so graph is static
+    .on("tick", tick);
+
+var svg = d3.select("#demoarea").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .on("mousemove", mousemove)
+    .on("mousedown", mousedown);
+
+svg.append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+var nodes = force.nodes(),
+    links = force.links(),
+    node = svg.selectAll(".node"),
+    link = svg.selectAll(".link");
+
+var cursor = svg.append("circle")
+    .attr("r", 30)
+    .attr("transform", "translate(-100,-100)")
+    .attr("class", "cursor");
+
+restart();
+
+function mousemove() {
+  cursor.attr("transform", "translate(" + d3.mouse(this) + ")");
+}
+
+function mousedown() {
+  var point = d3.mouse(this),
+      node = {x: point[0], y: point[1]},
+      n = nodes.push(node);
+
+  // We dont want to add links to nearby nodes here
+  /*
+  nodes.forEach(function(target) {
+    var x = target.x - node.x,
+        y = target.y - node.y;
+    if (Math.sqrt(x * x + y * y) < 30) {
+      links.push({source: node, target: target});
+    }
+  });
+  */ 
+
+  restart();
+}
+
+function tick() {
+  link.attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+
+  node.attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+}
+
+// Update edges and nodes
+function restart() {
+  link = link.data(links);
+
+  link.enter().insert("line", ".node")
+      .attr("class", "link");
+
+  node = node.data(nodes);
+
+  node.enter().insert("circle", ".cursor")
+      .attr("class", "node")
+      .attr("r", 5)
+      .call(force.drag);
+
+  force.start();
+}
+// All above lines come from a d3 example (mbostock)
+function compute() {
+  var vertices = [];
+  var edges    = [];
+  var edge;
+  for (var i = 0; i < nodes.length; i++) {
+     console.log("x", nodes[i].x)
+     console.log("y", nodes[i].y)
+     vertices.push([nodes[i].x, nodes[i].y]); // We now add coordinates of the points
+  }
+  for (i = 0; i < links.length; i++) {
+     edge = links[i];
+     if (edge.source.index !== edge.target.index) {
+       edges.push([edge.source.index, edge.target.index]);
+     }
+  }
+  console.log('vertices', vertices); // write out to the log (like print)
+  console.log('edges', edges);
+
+  d3.json('/resource') // using json (javascript format) function to send stuff to /resource page
+    .header('Content-Type', 'application/json')
+    .post(JSON.stringify({'vertices': vertices}), serverResponse); // Send dictionary with vertices and edges (arrays are values)
+} //When servers respond call serverResponse function
+
+function inArray (array, edge) {
+  var u = edge[0];
+  var v = edge[1];
+  var bool = false;
+  for (i = 0; i < array.length; i++) {
+    edgeprime = array[i];
+    if (u === edgeprime[0] && v === edgeprime[1]) {
+      bool = true;
+      break;
+    }
+  }
+  return bool;
+}
+
+
+function serverResponse(error, data) {
+   console.log('serverResponse');
+   console.log('data', data); // Print out data
+   if (!error) { // error = 0 => everything okay
+      if ('tour' in data) { // data is dict, should have a key cover
+        var tour = data.tour;
+        console.log('tour', tour);
+        nodes.forEach(function(target) {
+          console.log('inside', target);
+          //var x = target.x - node.x,
+          //    y = target.y - node.y;
+          //if (Math.sqrt(x * x + y * y) < 1000) {
+            links.push({source: nodes[0], target: target});
+          //}
+        });
+        console.log('links', links);
+        /*
+        var src = tour[0];
+        for (var i = 1; i < tour.length; i++) {
+          var tar = tour[i];
+          console.log("source", src)
+          console.log("source", nodes[src].x)
+          console.log("target", tar)
+          
+          links.push({source: nodes[src], target: nodes[tar]});
+          console.log("links", links)
+          src = tour[i]; // We now add coordinates of the points
+        }
+        */
+        
+        /*
+        for (var i = 1; i < nodes.length; i++) {
+          console.log("x", nodes[i].x)
+          console.log("y", nodes[i].y)
+          links.push({source: prev, target: nodes[i]});
+          console.log("i", i)
+          prev = nodes[i]; // We now add coordinates of the points
+        }
+        */
+        /*
+        d3.selectAll('.node') // execute function on each node
+            .each(function(target) {
+            console.log('target', target)
+            console.log('node', node)
+            var x = target.x - node.x,
+                y = target.y - node.y;
+            links.push({source: node, target: target})
+            link.attr("stroke", "yellow");
+            });
+            /
+        /*
+        .each(function(d) {
+                  var header = d3.select(this);
+                  // Convert to array with the index as the number corresponding to a vertex
+                  // (this also adds links (1,1), (2,2) etc but this wont affect it, as they will not be in cover)
+                  var d_arr = Object.keys(d).map(function (key) {return Number(d[key].index)});
+
+                  if (inArray(cover, d_arr)) { // if edge is in cover color it red
+                      header.style({'stroke': 'red'});
+                      header.style({'stroke-width': 3});
+                  } else {
+                      header.style({'stroke': '#999'});
+                      header.style({'stroke-width': 1});
+                  }
+        });
+        */
+      }
+   }
+}
+
+</script>

@@ -1,7 +1,7 @@
-# Edge Cover
-An example of using Gurobi to compute a minimal edge cover
+# Airline TSP
+An example of using Gurobi to compute a minimal weight Hamiltonian cycle (Traveling Salesman Problem)
 
-![](screenshot2.png?raw=true)
+![](screenshot.png?raw=true)
 
 # Running the example
 
@@ -14,11 +14,11 @@ An example of using Gurobi to compute a minimal edge cover
 
 3. Add some nodes with by clicking your mouse in the demo area.
 
-4. Click "Compute Edge Cover" to find the minimal edge cover.
+4. Click "Compute Tour" to find the minimal weight tour.
 
 # Performing an optimization
 
-To just solve the edge cover model (without running a web server) do:
+To just solve for the tour (without running a web server) do:
 
 ```
 make test
@@ -26,8 +26,8 @@ make test
 
 ## Sources
 
-The [d3][3] code for this example is based on Mike Bostock's ["Build your own Graph"][1] [block][2].
+The [d3][3] code for the map is based on Mike Bostock's ["Let's Make a Map"][1] [block][2].
 
-[1]: http://bl.ocks.org/mbostock/929623
+[1]: http://bost.ocks.org/mike/map/
 [2]: http://bl.ocks.org/mbostock
 [3]: http://d3js.org

@@ -356,6 +356,9 @@ function serverResponse(error, data) {
         
         // Draw lines between points
         var lines = svg.selectAll("line")
+                        .remove()
+        
+        var lines = svg.selectAll("line")
                         .data(links)
                         .enter()
                         .append("line");

@@ -45,7 +45,7 @@
 
 text {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   pointer-events: none;
 }
 
@@ -221,10 +221,10 @@ var svg = d3.select("#demoarea").append("svg")
     .on("mousedown", mousedown); // mousedown is function defined below whichis executed when you click
 
 // Need to put map in background
-/*
+
 var mapG = svg.append("g");
 var pointsG = svg.append("g");
-*/
+
 // Add the map
 var projection = d3.geo.albers()
     .center([0, 39.7])
@@ -241,13 +241,13 @@ d3.json("us.json", function(error, uk) {
   var subunits = topojson.feature(uk, uk.objects.subunits),
       places = topojson.feature(uk, uk.objects.places);
 
-  svg.selectAll(".subunit")
+  mapG.selectAll(".subunit")
       .data(subunits.features)
     .enter().append("path")
       .attr("class", function(d) { return "subunit " + d.id; })
       .attr("d", path);
 
-  svg.selectAll(".subunit-label")
+  mapG.selectAll(".subunit-label")
       .data(subunits.features)
     .enter().append("text")
       .attr("class", function(d) { return "subunit-label " + d.id; })
@@ -255,12 +255,12 @@ d3.json("us.json", function(error, uk) {
       .attr("dy", ".35em")
       .text(function(d) { return d.properties.name; });
 
-  svg.append("path")
+  mapG.append("path")
       .datum(places)
       .attr("d", path)
       .attr("class", "place");
 
-  svg.selectAll(".place-label")
+  mapG.selectAll(".place-label")
       .data(places.features)
     .enter().append("text")
       .attr("class", "place-label")
@@ -273,9 +273,10 @@ d3.json("us.json", function(error, uk) {
 });
 
 // Create some data (vertices of the graph here)
-var nodes = [[28,100], [152,190], [400,50]];
+// New York, Houston, SF, Seattle, Minneapolis, Denver coordinates
+var nodes = [[870, 170.875], [569, 487], [89, 303], [140, 108], [558, 177.875], [384, 300.875]];
 
-var circles = svg.selectAll("circle") // Select all the circles (that do not yet exist...)
+var circles = pointsG.selectAll("circle") // Select all the circles (that do not yet exist...)
                  .data(nodes) // Iterate over the dataset
                  .enter() // create an object
                  .append("circle"); // actually add circles
@@ -286,10 +287,11 @@ var circles = svg.selectAll("circle") // Select all the circles (that do not yet
             .attr("cy", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
             return nodes[i][1]; // i.e move x coordinate of center to the right
             })
-            .attr("r", 5)
-            .attr("fill", "black")
-            .attr("stroke", "gray")
-            .attr("stroke-width", 2);
+            .attr("r", 4)
+            .attr("fill",  "rgb(0, 150, 0)")
+            .attr("stroke", "rgb(0, 150, 0)")
+            .attr("stroke-opacity", 0.5)
+            .attr("stroke-width", 3);
 
 
 
@@ -312,10 +314,11 @@ function mousedown() {
             .attr("cy", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
             return nodes[i][1]; // i.e move x coordinate of center to the right
             })
-            .attr("r", 5)
-            .attr("fill", "black")
-            .attr("stroke", "gray")
-            .attr("stroke-width", 2);
+            .attr("r", 4)
+            .attr("fill",  "rgb(0, 150, 0)")
+            .attr("stroke", "rgb(0, 150, 0)")
+            .attr("stroke-opacity", 0.5)
+            .attr("stroke-width", 3);
 }
 
 function compute() {
@@ -357,8 +360,9 @@ function serverResponse(error, data) {
                         .enter()
                         .append("line");
         
-        lines.style("stroke", "blue")
-             .style("stroke-width", 3)
+        lines.style("stroke", "orange")
+             .style("opacity", 0.5)
+             .style("stroke-width", 2)
               .attr("x1", function(d,i) {
                 var node1 = nodes[links[i][0]];
                 var x1 = node1[0]

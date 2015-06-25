@@ -21,8 +21,7 @@ def handleoptimize(jsdict):
     if 'vertices' in jsdict:
         print 'Inside handle optimize!'
         print jsdict['vertices']
-        #print jsdict['edges']
-        tour = airlineTSP.optimize(jsdict['vertices']) # this calls optimize on edgecover
+        tour = airlineTSP.optimize(jsdict['vertices'])
         print 'tour', tour
         return {'tour': tour }
 

@@ -329,7 +329,7 @@ function compute() {
   }
   console.log('vertices', vertices);
 
-  d3.json('/resource')
+  d3.json('/airlineTSP')
     .header('Content-Type', 'application/json')
     .post(JSON.stringify({'vertices': vertices}), serverResponse);
 }

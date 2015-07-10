@@ -77,7 +77,7 @@ text {
       <p>Model description goes here.</p>
 
 <!-- We use tex with $ as usual-->
-      
+
 <!-- implementation (gurobi code) -->
     </div>
     <div class="section" id="implementation">
@@ -89,10 +89,10 @@ text {
         import math
         import random
         from gurobipy import *
-        
-        
+
+
         # Callback - use lazy constraints to eliminate sub-tours
-        
+
         def subtourelim(model, where):
             if where == GRB.callback.MIPSOL:
                 selected = []
@@ -109,18 +109,18 @@ text {
                         for j in range(i+1, len(tour)):
                             expr += model._vars[tour[i], tour[j]]
                     model.cbLazy(expr <= len(tour)-1)
-        
-        
+
+
         # Euclidean distance between two points
-        
+
         def distance(points, i, j):
             dx = points[i][0] - points[j][0]
             dy = points[i][1] - points[j][1]
             return math.sqrt(dx*dx + dy*dy)
-        
-        
+
+
         # Given a list of edges, finds the shortest subtour
-        
+
         def subtour(edges):
             visited = [False]*n
             cycles = []
@@ -143,21 +143,21 @@ text {
                 if sum(lengths) == n:
                     break
             return cycles[lengths.index(min(lengths))]
-        
+
         n = 50
-        
+
         # Create n random points
-        
+
         random.seed(1)
         points = []
         for i in range(n):
             points.append((random.randint(0,100),random.randint(0,100)))
-        
+
         m = Model()
-        
-        
+
+
         # Create variables
-        
+
         vars = {}
         for i in range(n):
             for j in range(i+1):
@@ -165,26 +165,26 @@ text {
                                      name='e'+str(i)+'_'+str(j))
                 vars[j,i] = vars[i,j]
         m.update()
-        
-        
+
+
         # Add degree-2 constraint, and forbid loops
-        
+
         for i in range(n):
             m.addConstr(quicksum(vars[i,j] for j in range(n)) == 2)
             vars[i,i].ub = 0
         m.update()
-        
-        
+
+
         # Optimize model
-        
+
         m._vars = vars
         m.params.LazyConstraints = 1
         m.optimize(subtourelim)
-        
+
         solution = m.getAttr('x', vars)
         selected = [(i,j) for i in range(n) for j in range(n) if solution[i,j] > 0.5]
         assert len(subtour(selected)) == n
-        
+
       </pre>
     </div>
     <div class="section" id="demo">
@@ -214,7 +214,7 @@ var xScale = d3.scale.linear()
 var yScale = d3.scale.linear()
             .domain([0, height])
             .range([height - padding, padding]);
-    
+
 var svg = d3.select("#demoarea").append("svg")
     .attr("width", width)
     .attr("height", height)
@@ -280,7 +280,7 @@ var circles = pointsG.selectAll("circle") // Select all the circles (that do not
                  .data(nodes) // Iterate over the dataset
                  .enter() // create an object
                  .append("circle"); // actually add circles
-  
+
   circles.attr("cx", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
             return nodes[i][0]; // i.e move x coordinate of center to the right
             })
@@ -301,13 +301,13 @@ function mousedown() {
   var point = d3.mouse(this);
   console.log(point)
   nodes.push(point);
-  
+
   // Add new point
   var circles = svg.selectAll("circle") // Select all the circles (that do not yet exist...)
                  .data(nodes) // Iterate over the dataset
                  .enter() // create an object
                  .append("circle"); // actually add circles
-  
+
   circles.attr("cx", function(d, i) { // cx is x coordinate of center // d always refers to the dataset linked to the circle // i is an index referring to each circle in dataset
             return nodes[i][0]; // i.e move x coordinate of center to the right
             })
@@ -328,11 +328,11 @@ function compute() {
      console.log("y", nodes[i][1])
   }
   console.log('vertices', vertices);
-  
-  d3.json('/resource')
+
+  d3.json('/airlineTSP')
     .header('Content-Type', 'application/json')
     .post(JSON.stringify({'vertices': vertices}), serverResponse);
-} 
+}
 
 
 function serverResponse(error, data) {
@@ -342,7 +342,7 @@ function serverResponse(error, data) {
       if ('tour' in data) {
         var tour = data.tour;
         console.log('tour', tour);
-        
+
         // Get list of edges of tour
         var src = tour[0];
         links = [];
@@ -351,18 +351,18 @@ function serverResponse(error, data) {
           src = tour[i];
         }
         links.push([tour[tour.length-1], tour[0]]);
-        
+
         console.log('links', links);
-        
+
         // Draw lines between points
         var lines = svg.selectAll("line")
                         .remove()
-        
+
         var lines = svg.selectAll("line")
                         .data(links)
                         .enter()
                         .append("line");
-        
+
         lines.style("stroke", "orange")
              .style("opacity", 0.5)
              .style("stroke-width", 2)

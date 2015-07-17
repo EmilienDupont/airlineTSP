@@ -309,8 +309,8 @@ var yScale = d3.scale.linear()
 
 var svg = d3.select("#demoarea").append("svg")
     .attr("width", width)
-    .attr("height", height)
-    .on("mousedown", mousedown); // mousedown is function defined below whichis executed when you click
+    .attr("height", height);
+    //.on("mousedown", mousedown); // mousedown is function defined below whichis executed when you click
 
 var voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]]);
 
@@ -414,7 +414,8 @@ d3.json("USwithCities5.json", function(error, us) {
                         .attr("stroke-width", 2)
                         .attr("stroke-opacity", 1)
                         .on("mouseover", mouseover)
-                        .on("mouseout", mouseout);
+                        .on("mouseout", mouseout)
+                        .on("mousedown", mousedown);
 });
 
 function nonzeroArray(value) {
@@ -432,7 +433,7 @@ function polygon(d) {
 }
 
 function mouseover() {
-  d3.select(this).attr("opacity", .2);
+  d3.select(this).attr("opacity", .1);
   var id = d3.select(this).attr("id");
   var place = "#p" + id;
   d3.select(place).attr("opacity", 1);
@@ -444,15 +445,6 @@ function mouseout() {
   var place = "#p" + id;
   d3.select(place).attr("opacity", 0);
 }
-/*
-airportData = d3.csv("airports.csv")
-                .row(function(d) { return {
-                name: d.name,
-                city: d.city,
-                state: d.state,
-                latitude: d.latitude,
-                longitude: d.longitude}; });
-console.log(airportData); */
 
 // Create some data (vertices of the graph here)
 // New York, Houston, SF, Seattle, Minneapolis, Denver coordinates
@@ -480,8 +472,13 @@ var circles = pointsG.selectAll("circle") // Select all the circles (that do not
 
 
 function mousedown() {
-  var point = d3.mouse(this);
-  console.log(point)
+  var id = d3.select(this).attr("id");
+  id = parseInt(id);
+  console.log('id', id);
+  var num = airportIds.indexOf(id);
+  console.log('num',num);
+  var point = airports[num];
+  console.log(point);
   nodes.push(point);
 
   // Add new point

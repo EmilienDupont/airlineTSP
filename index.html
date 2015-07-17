@@ -298,15 +298,6 @@ var width = 960,
     height = 600;
     padding = 10;
 
-// Create scales
-var xScale = d3.scale.linear()
-            .domain([0, width])
-            .range([padding, width - padding]);
-
-var yScale = d3.scale.linear()
-            .domain([0, height])
-            .range([height - padding, padding]);
-
 var svg = d3.select("#demoarea").append("svg")
     .attr("width", width)
     .attr("height", height);
@@ -320,6 +311,7 @@ var mapG = svg.append("g");
 var voronoiG = svg.append("g");
 var labelG = svg.append("g");
 var pointsG = svg.append("g");
+var selectG = svg.append("g");
 
 // Add the map
 var projection = d3.geo.albers()
@@ -348,6 +340,7 @@ for (var i = 0; i < numColors; i++) {
 
 // Data structures needed for airport data
 var airports = [];
+var airportInfo = [];
 var airportIds = [];
 var airportNum = 0;
 var voroPath;
@@ -380,6 +373,7 @@ d3.json("USwithCities5.json", function(error, us) {
 
   for (var i = 0; i < places.features.length; i++) {
     airports.push(projection(places.features[i].geometry.coordinates));
+    airportInfo.push(places.features[i].properties.name);
   }
 
   console.log('airports', airports);
@@ -441,7 +435,7 @@ function mouseover() {
 
 function mouseout() {
   d3.select(this).attr("opacity", 0);
-    var id = d3.select(this).attr("id");
+  var id = d3.select(this).attr("id");
   var place = "#p" + id;
   d3.select(place).attr("opacity", 0);
 }
@@ -462,8 +456,8 @@ var circles = pointsG.selectAll("circle") // Select all the circles (that do not
             return nodes[i][1]; // i.e move x coordinate of center to the right
             })
             .attr("r", 4)
-            .attr("fill",  "rgb(0, 150, 0)")
-            .attr("stroke", "rgb(0, 150, 0)")
+            .attr("fill",  "rgb(0, 0, 150)")
+            .attr("stroke", "rgb(0, 0, 150)")
             .attr("stroke-opacity", 0.5)
             .attr("stroke-width", 3);
 
@@ -481,6 +475,16 @@ function mousedown() {
   console.log(point);
   nodes.push(point);
 
+  // Add label
+  selectG.append("text")
+         .attr("class", "place-label")
+         .attr("transform", function(d) { return "translate(" + airports[num] + ")"; })
+         .attr("x", function(d) { return airports[num][0] > -1 ? 6 : -6; })
+         .attr("dy", ".35em")
+         .style("text-anchor", function(d) { return airports[num][0] > -1 ? "start" : "end"; })
+         .text(airportInfo[num])
+         .attr("fill", "blue");
+
   // Add new point
   var circles = svg.selectAll("circle") // Select all the circles (that do not yet exist...)
                  .data(nodes) // Iterate over the dataset
@@ -494,8 +498,8 @@ function mousedown() {
             return nodes[i][1]; // i.e move x coordinate of center to the right
             })
             .attr("r", 4)
-            .attr("fill",  "rgb(0, 150, 0)")
-            .attr("stroke", "rgb(0, 150, 0)")
+            .attr("fill",  "rgb(0, 0, 150)")
+            .attr("stroke", "rgb(0, 0, 150)")
             .attr("stroke-opacity", 0.5)
             .attr("stroke-width", 3);
 }

@@ -114,19 +114,6 @@ aside {
    border-left: 3px solid steelblue;
 }
 
-.subunit.USB { fill: #ddc; }
-
-.subunit.USK,
-.subunit-label.USK {
-  display: none;
-}
-
-.subunit-boundary {
-  fill: none;
-  stroke: #777;
-  stroke-dasharray: 2,2;
-  stroke-linejoin: round;
-}
 
 .subunit-label {
   fill: #777;
@@ -325,9 +312,13 @@ var svg = d3.select("#demoarea").append("svg")
     .attr("height", height)
     .on("mousedown", mousedown); // mousedown is function defined below whichis executed when you click
 
+var voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]]);
+
 // Need to put map in background
 
 var mapG = svg.append("g");
+var voronoiG = svg.append("g");
+var labelG = svg.append("g");
 var pointsG = svg.append("g");
 
 // Add the map
@@ -342,19 +333,41 @@ var path = d3.geo.path()
     .projection(projection)
     .pointRadius(2);
 
-d3.json("us.json", function(error, uk) {
-  var subunits = topojson.feature(uk, uk.objects.subunits),
-      places = topojson.feature(uk, uk.objects.places);
+// Create color gradient for the map
+var mapColors = [];
+var maxRed = 222, minRed = 49;
+var maxGreen = 235, minGreen = 130;
+var maxBlue = 247, minBlue = 189;
+var numColors = 10;
+for (var i = 0; i < numColors; i++) {
+  var red = String( Math.round( minRed + (maxRed - minRed)*i/numColors ) );
+  var green = String( Math.round( minGreen + (maxGreen - minGreen)*i/numColors) );
+  var blue = String( Math.round( minBlue + (maxBlue - minBlue)*i/numColors ) );
+  mapColors.push( "rgb(" + red + "," + green + "," + blue + ")");
+}
+
+// Data structures needed for airport data
+var airports = [];
+var airportIds = [];
+var airportNum = 0;
+var voroPath;
+
+d3.json("USwithCities5.json", function(error, us) {
+  var states = topojson.feature(us, us.objects.statesUSA);
+  var places = topojson.feature(us, us.objects.placesUSA5);
 
   mapG.selectAll(".subunit")
-      .data(subunits.features)
-    .enter().append("path")
-      .attr("class", function(d) { return "subunit " + d.id; })
+      .data(states.features)
+      .enter().append("path")
+      .attr("fill", function(d,i) { return mapColors[i % 9];})
+      .attr("stroke", "white")
+      .attr("stroke-width", 1)
+      .attr("opacity", .8)
       .attr("d", path);
 
   mapG.selectAll(".subunit-label")
-      .data(subunits.features)
-    .enter().append("text")
+      .data(states.features)
+      .enter().append("text")
       .attr("class", function(d) { return "subunit-label " + d.id; })
       .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
       .attr("dy", ".35em")
@@ -365,17 +378,81 @@ d3.json("us.json", function(error, uk) {
       .attr("d", path)
       .attr("class", "place");
 
-  mapG.selectAll(".place-label")
+  for (var i = 0; i < places.features.length; i++) {
+    airports.push(projection(places.features[i].geometry.coordinates));
+  }
+
+  console.log('airports', airports);
+
+  // Have to do this filter because some of the airports are also in Canada, Mexico etc...
+  // So they will become zero and cause problems
+  var dataAirports = voronoi(airports).filter(nonzeroArray);
+  console.log(dataAirports);
+  console.log(airportIds);
+
+  labelG.selectAll(".place-label")
       .data(places.features)
-    .enter().append("text")
+      .enter().append("text")
       .attr("class", "place-label")
       .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
       .attr("x", function(d) { return d.geometry.coordinates[0] > -1 ? 6 : -6; })
       .attr("dy", ".35em")
       .style("text-anchor", function(d) { return d.geometry.coordinates[0] > -1 ? "start" : "end"; })
-      .text(function(d) { return d.properties.name; });
+      .text(function(d) { return d.properties.name; })
+      .attr("id", function(d,i) { if (airportIds[i] > -1) { return "p" + airportIds[i]; } else {return "n" + i;} })
+      .attr("opacity", 0);
 
+  var voroPath = voronoiG.selectAll("polygon")
+                        .data(dataAirports)
+                        .enter()
+                        .append("polygon")
+                        .attr("points", function(d) { return d; })
+                        .attr("fill", "black")
+                        .attr("opacity", 0)
+                        .attr("id", function(d,i) { return i;})
+                        .attr("stroke", "black")
+                        .attr("stroke-width", 2)
+                        .attr("stroke-opacity", 1)
+                        .on("mouseover", mouseover)
+                        .on("mouseout", mouseout);
 });
+
+function nonzeroArray(value) {
+  if (value.length > 0) {
+    airportIds.push(airportNum);
+    airportNum++;
+  } else {
+    airportIds.push(-1);
+  }
+  return value.length > 0;
+}
+
+function polygon(d) {
+  return "M" + d.join("L") + "Z";
+}
+
+function mouseover() {
+  d3.select(this).attr("opacity", .2);
+  var id = d3.select(this).attr("id");
+  var place = "#p" + id;
+  d3.select(place).attr("opacity", 1);
+}
+
+function mouseout() {
+  d3.select(this).attr("opacity", 0);
+    var id = d3.select(this).attr("id");
+  var place = "#p" + id;
+  d3.select(place).attr("opacity", 0);
+}
+/*
+airportData = d3.csv("airports.csv")
+                .row(function(d) { return {
+                name: d.name,
+                city: d.city,
+                state: d.state,
+                latitude: d.latitude,
+                longitude: d.longitude}; });
+console.log(airportData); */
 
 // Create some data (vertices of the graph here)
 // New York, Houston, SF, Seattle, Minneapolis, Denver coordinates

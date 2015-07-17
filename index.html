@@ -389,9 +389,9 @@ d3.json("USwithCities5.json", function(error, us) {
       .enter().append("text")
       .attr("class", "place-label")
       .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
-      .attr("x", function(d) { return d.geometry.coordinates[0] > -1 ? 6 : -6; })
+      .attr("x", function(d) { return projection(d.geometry.coordinates[0]) > -1 ? 6 : -6; })
       .attr("dy", ".35em")
-      .style("text-anchor", function(d) { return d.geometry.coordinates[0] > -1 ? "start" : "end"; })
+      .style("text-anchor", function(d) { return projection(d.geometry.coordinates[0]) > -1 ? "start" : "end"; })
       .text(function(d) { return d.properties.name; })
       .attr("id", function(d,i) { if (airportIds[i] > -1) { return "p" + airportIds[i]; } else {return "n" + i;} })
       .attr("opacity", 0);
@@ -442,8 +442,10 @@ function mouseout() {
 
 // Create some data (vertices of the graph here)
 // New York, Houston, SF, Seattle, Minneapolis, Denver coordinates
-//var nodes = [[870, 170.875], [569, 487], [89, 303], [140, 108], [558, 177.875], [384, 300.875]];
-var nodes = [];
+var nodes = [[868.9435806134477, 169.89036899270104], [568.4792351442809, 485.81616835323234],
+             [88.00091068848855, 302.2404899932818], [138.92361765862051, 106.63257539875156],
+             [557.4835260884684, 176.6910465103682], [382.642835580352, 299.1252133874681]];
+var names = ["New York", "Houston", "San Francisco", "Seattle", "Minneapolis", "Denver"];
 
 var circles = pointsG.selectAll("circle") // Select all the circles (that do not yet exist...)
                  .data(nodes) // Iterate over the dataset
@@ -462,6 +464,16 @@ var circles = pointsG.selectAll("circle") // Select all the circles (that do not
             .attr("stroke-opacity", 0.5)
             .attr("stroke-width", 3);
 
+for (var i = 0; i < names.length; i++) {
+  selectG.append("text")
+         .attr("transform", function(d) { return "translate(" + nodes[i] + ")"; })
+         .attr("x", function(d) { return nodes[i][0] > -1 ? 6 : -6; })
+         .attr("dy", ".35em")
+         .style("text-anchor", function(d) { return nodes[i][0] > -1 ? "start" : "end"; })
+         .text(names[i])
+         .attr("id", String(names[i]).replace(/ /g, ''))
+         .attr("fill", "blue");
+}
 
 function indexArray (array, point) {
   var p0 = point[0];
@@ -497,7 +509,6 @@ function mousedown() {
     nodes.push(point);
     // Add label
     selectG.append("text")
-         .attr("class", "place-label")
          .attr("transform", function(d) { return "translate(" + airports[num] + ")"; })
          .attr("x", function(d) { return airports[num][0] > -1 ? 6 : -6; })
          .attr("dy", ".35em")

@@ -442,7 +442,8 @@ function mouseout() {
 
 // Create some data (vertices of the graph here)
 // New York, Houston, SF, Seattle, Minneapolis, Denver coordinates
-var nodes = [[870, 170.875], [569, 487], [89, 303], [140, 108], [558, 177.875], [384, 300.875]];
+//var nodes = [[870, 170.875], [569, 487], [89, 303], [140, 108], [558, 177.875], [384, 300.875]];
+var nodes = [];
 
 var circles = pointsG.selectAll("circle") // Select all the circles (that do not yet exist...)
                  .data(nodes) // Iterate over the dataset
@@ -462,8 +463,19 @@ var circles = pointsG.selectAll("circle") // Select all the circles (that do not
             .attr("stroke-width", 3);
 
 
-
-
+function indexArray (array, point) {
+  var p0 = point[0];
+  var p1 = point[1];
+  var index = -1;
+  for (i = 0; i < array.length; i++) {
+    pointprime = array[i];
+    if (p0 === pointprime[0] && p1 === pointprime[1]) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
 
 function mousedown() {
   var id = d3.select(this).attr("id");
@@ -473,20 +485,32 @@ function mousedown() {
   console.log('num',num);
   var point = airports[num];
   console.log(point);
-  nodes.push(point);
 
-  // Add label
-  selectG.append("text")
+  if (indexArray(nodes, point) > -1) {
+    console.log('point already exists!');
+    nodes.splice(indexArray(nodes, point),1);
+    // Remove label
+    var labelId = "#" + String(airportInfo[num]).replace(/ /g, ''); // remove whitespace from id
+    console.log(labelId);
+    selectG.select(labelId).remove("text");
+  } else {
+    nodes.push(point);
+    // Add label
+    selectG.append("text")
          .attr("class", "place-label")
          .attr("transform", function(d) { return "translate(" + airports[num] + ")"; })
          .attr("x", function(d) { return airports[num][0] > -1 ? 6 : -6; })
          .attr("dy", ".35em")
          .style("text-anchor", function(d) { return airports[num][0] > -1 ? "start" : "end"; })
          .text(airportInfo[num])
+         .attr("id", String(airportInfo[num]).replace(/ /g, ''))
          .attr("fill", "blue");
+  }
 
-  // Add new point
-  var circles = svg.selectAll("circle") // Select all the circles (that do not yet exist...)
+  // Draw the nodes
+  pointsG.selectAll("circle").remove("circle");
+
+  var circles = pointsG.selectAll("circle") // Select all the circles (that do not yet exist...)
                  .data(nodes) // Iterate over the dataset
                  .enter() // create an object
                  .append("circle"); // actually add circles

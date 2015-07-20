@@ -152,6 +152,7 @@ text {
     <div class="section" id="problem">
       <h2><a href="#problem" name="problem">Problem Description</a></h2>
       Problem description goes here
+      <p> Shows the use of lazy constraints in Gurobi</p>
     </div>
     <div class="section" id="model">
       <h2><a href="#model" name="model">Mathematical Model</a></h2>
@@ -181,11 +182,43 @@ text {
       In other words, for every node $i$ exactly two of $x_{ij}$ binary variables should be equal
       to 1. We write this as
       \[
-      \sum_{j \in V} x_{ij} = 2 \forall i \in V
+      \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V
       \]
       </p>
 
+      <p> Solving the problem at this point would yield tours of the cities, but it may not yield
+      a single tour. For example, figure ?? (add a figure here with 2 cycles) shows a solution to the problem as we have formulated is so
+      far: each node has exactly two edges indcident on it. We therefore need to add an extra constraint.</p>
+
+      <p> To eliminate the subtours we can add the following constraint. For each proper subset $S$ of the set of
+      cities $V$, the number of edges between the nodes of $S$ must be at most $\left\vert{S}\right\vert - 1$.
+      Indeed if the number of edges were equal to $S$ then we could form a subtour. For example, in figure
+      ?? the subset of nodes $\{1,2,3\}$ has 3 edges. Therefore, for each proper subset $S$ of the nodes $V$ we
+      add the constraint
+      \[
+      \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V
+      \]
+      </p>
+
+      <p> So finally the integer program formulation becomes
+      \[
+      \begin{array}{ll}
+      \text{minimize} & \sum_{(i,j) \in E} d_{ij} x_{ij} \\
+      \text{subject to} & \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V \\
+                        & \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V  \\
+                        & x_{ij} \in \{ 0, 1 \}
+      \end{array}
+      \]</p>
+
+      <p> We note, however, that since there is an exponential number of subsets of the nodes $V$, there will
+      be an exponential number of constraints of the type $\sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1$.
+      We therefore add these as <em>lazy constraints</em>. Lazy constraints are inactive until a
+      feasible solution is found. So for our example, Gurobi will first solve the MIP without the subtour constraints.
+      If the computed tour has a length of $n$ then the problem is solved. Otherwise, if there is a
+      subtour, we add in a constraint for the shortest subtour in the graph and solve the problem again. This
+      process then continues until a tour of length $n$ has been found.</p>
     </div>
+    
     <div class="section" id="implementation">
       <h2><a href="#implementation" name="implementation">Implementation</a></h2>
       <p>Below is the full implementation of the model (and the associated data) in

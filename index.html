@@ -135,9 +135,7 @@ text {
 }
 
 </style>
-<!-- Next lines html -->
 <body>
-  <!-- Navigation -->
   <ul id="nav">
     <li class="current"><a href="#intro">Intro</a></li>
     <li><a href="#problem">Problem</a></li>
@@ -145,7 +143,6 @@ text {
     <li><a href="#implementation">Implementation</a></li>
     <li><a href="#demo">Live Demo</a></li>
   </ul>
-  <!--Set title and write stuff-->
   <div id="container">
     <div class="section" id="intro">
       <h1>Flight Tour</h1>
@@ -159,11 +156,35 @@ text {
     <div class="section" id="model">
       <h2><a href="#model" name="model">Mathematical Model</a></h2>
 
-      <p>Model description goes here.</p>
+      <p>We let the $n$ selected cities be the set of vertices $V$ of a graph. The set of edges
+      $E$ of the graph corresponds to the different connections between each city. Since we can
+      travel from any city to another, the graph is complete i.e. there is an edge between
+      every pair of nodes. With each of these edges we associate a binary variable
+      \[
+      x_{ij} = \left\{\begin{array}{ll}
+             1 & \text{if edge $(i,j) \in E$ is in tour }\\
+             0 & \mathrm{otherwise}
+            \end{array}\right.
+      \]</p>
 
-<!-- We use tex with $ as usual-->
+      <p> We want to minimize the total distance travelled through the tour. Therefore, we calculate
+      the Euclidean distance between each pair of nodes. We denote this distance $d_{ij}$ for nodes
+      $i$ and $j$. The total distance travelled is then the sum of the distances of the edges included
+      in the tour, i.e.
+      \[
+      \text{length of tour} = \sum_{(i,j) \in E} d_{ij} x_{ij}
+      \]
+      </p>
 
-<!-- implementation (gurobi code) -->
+      <p> Since we are computing a flight tour we should only pass through each city once. Therefore,
+      for each node in the graph we should have exactly one incoming edge and one outgoing edge.
+      In other words, for every node $i$ exactly two of $x_{ij}$ binary variables should be equal
+      to 1. We write this as
+      \[
+      \sum_{j \in V} x_{ij} = 2 \forall i \in V
+      \]
+      </p>
+
     </div>
     <div class="section" id="implementation">
       <h2><a href="#implementation" name="implementation">Implementation</a></h2>
@@ -291,7 +312,6 @@ text {
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
-<!-- After script, javascript -->
 <script>
 
 var width = 960,
@@ -301,7 +321,6 @@ var width = 960,
 var svg = d3.select("#demoarea").append("svg")
     .attr("width", width)
     .attr("height", height);
-    //.on("mousedown", mousedown); // mousedown is function defined below whichis executed when you click
 
 var voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]]);
 
@@ -379,7 +398,7 @@ d3.json("USwithCities5.json", function(error, us) {
   console.log('airports', airports);
 
   // Have to do this filter because some of the airports are also in Canada, Mexico etc...
-  // So they will become zero and cause problems
+  // Since they will become zero and cause problems
   var dataAirports = voronoi(airports).filter(nonzeroArray);
   console.log(dataAirports);
   console.log(airportIds);

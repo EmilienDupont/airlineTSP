@@ -214,9 +214,9 @@ text {
       <p> We note, however, that since there is an exponential number of subsets of the nodes $V$, there will
       be an exponential number of constraints of the type $\sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1$.
       We therefore add these as <em>lazy constraints</em>. Lazy constraints are inactive until a
-      feasible solution is found. So for our example, Gurobi will first solve the MIP without the subtour constraints.
+      feasible solution is found. So for our example, Gurobi will first find a feasible solution without the subtour constraints.
       If the computed tour has a length of $n$ then the problem is solved. Otherwise, if there is a
-      subtour, we add in a constraint for the shortest subtour in the graph and solve the problem again. This
+      subtour, we add in a constraint corresponding to the shortest subtour in the graph and continue solving the problem. This
       process then continues until a tour of length $n$ has been found.</p>
     </div>
 
@@ -398,6 +398,7 @@ var airportIds = [];
 var airportNum = 0;
 var voroPath;
 
+
 d3.json("USwithCities5.json", function(error, us) {
   var states = topojson.feature(us, us.objects.statesUSA);
   var places = topojson.feature(us, us.objects.placesUSA5);
@@ -433,7 +434,7 @@ d3.json("USwithCities5.json", function(error, us) {
       .data(places.features)
       .enter().append("text")
       .attr("class", "place-label")
-      .attr("transform", function(d,i) { console.log(i); return "translate(" + airports[i] + ")"; })
+      .attr("transform", function(d,i) { return "translate(" + airports[i] + ")"; })
       .attr("x", function(d,i) { return airports[i][0] > -1 ? 6 : -6; })
       .attr("dy", ".35em")
       .style("text-anchor", function(d,i) { return airports[i][0] > -1 ? "start" : "end"; })

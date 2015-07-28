@@ -480,13 +480,19 @@ var svg = d3.select("#demoarea").append("svg")
 
 var voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]]);
 
-// Need to put map in background
-
+// G objects for graphics
 var mapG = svg.append("g");
-var voronoiG = svg.append("g");
 var labelG = svg.append("g");
 var pointsG = svg.append("g");
 var selectG = svg.append("g");
+var voronoiG = svg.append("g");
+
+// Data structures needed for airport data
+var airports = [];
+var airportInfo = [];
+var airportIds = [];
+var airportNum = 0;
+var voroPath;
 
 // Add the map
 var projection = d3.geo.albers()
@@ -513,14 +519,6 @@ for (var i = 0; i < numColors; i++) {
   mapColors.push( "rgb(" + red + "," + green + "," + blue + ")");
 }
 
-// Data structures needed for airport data
-var airports = [];
-var airportInfo = [];
-var airportIds = [];
-var airportNum = 0;
-var voroPath;
-
-
 d3.json("USwithCities5.json", function(error, us) {
   var states = topojson.feature(us, us.objects.statesUSA);
   var places = topojson.feature(us, us.objects.placesUSA5);
@@ -546,8 +544,7 @@ d3.json("USwithCities5.json", function(error, us) {
   console.log('number of places', places.features.length)
   console.log('airports', airports);
 
-  // Have to do this filter because some of the airports are also in Canada, Mexico etc...
-  // Since they will become zero and cause problems
+  // Filter because some of the airports are also in Canada, Mexico etc...
   var dataAirports = voronoi(airports).filter(nonzeroArray);
   console.log('data', dataAirports);
   console.log('airIds', airportIds);
@@ -590,6 +587,20 @@ function nonzeroArray(value) {
   return value.length > 0;
 }
 
+function indexArray(array, point) {
+  var p0 = point[0];
+  var p1 = point[1];
+  var index = -1;
+  for (i = 0; i < array.length; i++) {
+    pointprime = array[i];
+    if (p0 === pointprime[0] && p1 === pointprime[1]) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
 function polygon(d) {
   return "M" + d.join("L") + "Z";
 }
@@ -606,55 +617,6 @@ function mouseout() {
   d3.select(place).attr("opacity", 0);
 }
 
-// Create some data (vertices of the graph here)
-// New York, Houston, SF, Seattle, Minneapolis, Denver coordinates
-var nodes = [[868.9435806134477, 169.89036899270104], [568.4792351442809, 485.81616835323234],
-             [88.00091068848855, 302.2404899932818], [138.92361765862051, 106.63257539875156],
-             [557.4835260884684, 176.6910465103682], [382.642835580352, 299.1252133874681]];
-var names = ["New York", "Houston", "San Francisco", "Seattle", "Minneapolis", "Denver"];
-
-var circles = pointsG.selectAll("circle")
-                 .data(nodes)
-                 .enter()
-                 .append("circle");
-
-  circles.attr("cx", function(d, i) {
-            return nodes[i][0];
-            })
-            .attr("cy", function(d, i) {
-            return nodes[i][1];
-            })
-            .attr("r", 4)
-            .attr("fill",  "rgb(0, 0, 150)")
-            .attr("stroke", "rgb(0, 0, 150)")
-            .attr("stroke-opacity", 0.5)
-            .attr("stroke-width", 3);
-
-for (var i = 0; i < names.length; i++) {
-  selectG.append("text")
-         .attr("transform", function(d) { return "translate(" + nodes[i] + ")"; })
-         .attr("x", function(d) { return nodes[i][0] > -1 ? 6 : -6; })
-         .attr("dy", ".35em")
-         .style("text-anchor", function(d) { return nodes[i][0] > -1 ? "start" : "end"; })
-         .text(names[i])
-         .attr("id", String(names[i]).replace(/ /g, ''))
-         .attr("fill", "blue");
-}
-
-function indexArray (array, point) {
-  var p0 = point[0];
-  var p1 = point[1];
-  var index = -1;
-  for (i = 0; i < array.length; i++) {
-    pointprime = array[i];
-    if (p0 === pointprime[0] && p1 === pointprime[1]) {
-      index = i;
-      break;
-    }
-  }
-  return index;
-}
-
 function mousedown() {
   var id = d3.select(this).attr("id");
   id = parseInt(id);
@@ -667,21 +629,8 @@ function mousedown() {
   if (indexArray(nodes, point) > -1) {
     console.log('point already exists!');
     nodes.splice(indexArray(nodes, point),1);
-    // Remove label
-    var labelId = "#" + String(airportInfo[num]).replace(/ /g, ''); // remove whitespace from id
-    console.log(labelId);
-    selectG.select(labelId).remove("text");
   } else {
     nodes.push(point);
-    // Add label
-    selectG.append("text")
-         .attr("transform", function(d) { return "translate(" + airports[num] + ")"; })
-         .attr("x", function(d) { return airports[num][0] > -1 ? 6 : -6; })
-         .attr("dy", ".35em")
-         .style("text-anchor", function(d) { return airports[num][0] > -1 ? "start" : "end"; })
-         .text(airportInfo[num])
-         .attr("id", String(airportInfo[num]).replace(/ /g, ''))
-         .attr("fill", "blue");
   }
 
   // Draw the nodes
@@ -705,17 +654,34 @@ function mousedown() {
             .attr("stroke-width", 3);
 }
 
-function compute() {
-  var vertices = nodes;
-  for (var i = 0; i < nodes.length; i++) {
-     console.log("x", nodes[i][0])
-     console.log("y", nodes[i][1])
-  }
-  console.log('vertices', vertices);
+// New York, Houston, SF, Seattle, Minneapolis, Denver coordinates
+var nodes = [[868.9435806134477, 169.89036899270104], [568.4792351442809, 485.81616835323234],
+             [88.00091068848855, 302.2404899932818], [138.92361765862051, 106.63257539875156],
+             [557.4835260884684, 176.6910465103682], [382.642835580352, 299.1252133874681]];
 
+// Add initial cities in tour
+var circles = pointsG.selectAll("circle")
+                 .data(nodes)
+                 .enter()
+                 .append("circle");
+
+  circles.attr("cx", function(d, i) {
+            return nodes[i][0];
+            })
+            .attr("cy", function(d, i) {
+            return nodes[i][1];
+            })
+            .attr("r", 4)
+            .attr("fill",  "rgb(0, 0, 150)")
+            .attr("stroke", "rgb(0, 0, 150)")
+            .attr("stroke-opacity", 0.5)
+            .attr("stroke-width", 3);
+
+function compute() {
+  console.log('vertices', nodes);
   d3.json('/airlineTSP')
     .header('Content-Type', 'application/json')
-    .post(JSON.stringify({'vertices': vertices}), serverResponse);
+    .post(JSON.stringify({'vertices': nodes}), serverResponse);
 }
 
 

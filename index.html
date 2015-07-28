@@ -528,8 +528,8 @@ for (var i = 0; i < numColors; i++) {
   mapColors.push( "rgb(" + red + "," + green + "," + blue + ")");
 }
 
-d3.json("USwithCities5.json", function(error, us) {
-  var states = topojson.feature(us, us.objects.statesUSA);
+d3.json("US_TSP.json", function(error, us) {
+  var states = topojson.feature(us, us.objects.states);
   var places = topojson.feature(us, us.objects.placesUSA5);
 
   mapG.selectAll(".subunit")

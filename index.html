@@ -144,7 +144,7 @@ text {
   </ul>
   <div id="container">
     <div class="section" id="intro">
-      <h1>Flight Tour</h1>
+      <h1>The Travelling Salesman Problem</h1>
         <subtitle>with integer programming and Gurobi</subtitle>
     </div>
 
@@ -193,7 +193,7 @@ text {
       <h2><a href="#model" name="model">Mathematical Model</a></h2>
 
       <p>
-        We let the $n$ selected cities in the salesmans tour be the set
+        We let the $n$ selected cities in the salesman's tour be the set
         of vertices $V$ of a graph. The set of edges $E$ of the graph
         corresponds to the different connections between each city. Since
         we can travel from any city to another, the graph is complete i.e.
@@ -222,8 +222,8 @@ text {
         Since we are computing a flight tour we should only pass through
         each city once. Therefore, for each node in the graph we should
         have exactly one incoming edge and one outgoing edge. In other words,
-        for every node $i$ exactly two of $x_{ij}$ binary variables should
-        be equal to 1. We write this as
+        for every node $i$ exactly two of the $x_{ij}$ binary variables
+        should be equal to 1. We write this as
         \[
         \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V
         \]
@@ -240,33 +240,106 @@ text {
         extra constraint.
       </p>
 
-      <p> To eliminate the subtours we can add the following constraint. For each proper subset $S$ of the set of
-      cities $V$, the number of edges between the nodes of $S$ must be at most $\left\vert{S}\right\vert - 1$.
-      Indeed if the number of edges were equal to $S$ then we could form a subtour. For example, in figure
-      ?? the subset of nodes $\{1,2,3\}$ has 3 edges. Therefore, for each proper subset $S$ of the nodes $V$ we
-      add the constraint
-      \[
-      \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V
-      \]
+      <figure id="subtourdemo">
+      <aside>
+        Fig. 1: An example of subtours
+      </aside>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+      <script>
+        var width = 800,
+            height = 250,
+            size = width/6;
+
+        var svgdemo = d3.select("#subtourdemo").append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+
+        var lineG = svgdemo.append("g");
+
+        var pointsG = svgdemo.append("g");
+
+        var textG = svgdemo.append("g");
+
+        var pointData = [[.1*width, .8*height], [.25*width, .2*height], [.35*width, .75*height],
+                         [.5*width, .18*height], [.68*width, .22*height], [.72*width, .8*height],
+                         [.45*width, .90*height]];
+
+        var cycleData = [[0,1], [1,2], [2,0], [3,4], [4,5], [5,6], [6,3]];
+
+        var points = pointsG.selectAll("circle")
+                            .data(pointData)
+                            .enter()
+                            .append("circle")
+                            .attr("cx", function(d) { return d[0]; })
+                            .attr("cy", function(d) { return d[1]; })
+                            .attr("r", 5)
+                            .attr("stroke", "rgb(100, 0, 0)")
+                            .attr("fill", "rgb(200, 0, 0)");
+
+        var texts = textG.selectAll("text")
+                           .data(pointData)
+                           .enter()
+                           .append("text")
+                           .text(function(d,i) { return String(i+1); })
+                           .attr("x", function(d) { return d[0] - 20; })
+                           .attr("y", function(d) { return d[1] - 5; })
+                           .attr("font-family", "sans-serif")
+                           .attr("font-size", "18px")
+                           .attr("fill", "black")
+                           .attr("font-weight", 400)
+                           .attr("text-anchor", "middle");
+
+        var cycles = lineG.selectAll("line")
+                          .data(cycleData)
+                          .enter()
+                          .append("line")
+                          .attr("x1", function(d) { var j = d[0]; return pointData[j][0]; })
+                          .attr("x2", function(d) { var j = d[1]; return pointData[j][0]; })
+                          .attr("y1", function(d) { var j = d[0]; return pointData[j][1]; })
+                          .attr("y2", function(d) { var j = d[1]; return pointData[j][1]; })
+                          .attr("stroke", "black")
+                          .attr("stroke-width", 2);
+      </script>
+
+      <p>
+        To eliminate the subtours we can add the following constraint.
+        For each proper subset $S$ of the set of cities $V$, the number of
+        edges between the nodes of $S$ must be at most $\left\vert{S}\right\vert - 1$.
+        Indeed if the number of edges were equal to $S$ then we could form a
+        subtour. For example, in Fig. 1 the subset of nodes $\{1,2,3\}$ has 3
+        edges. Therefore, for each proper subset $S$ of the nodes $V$ we
+        add the constraint
+        \[
+        \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V
+        \]
       </p>
 
-      <p> So finally the integer program formulation becomes
-      \[
-      \begin{array}{ll}
-      \text{minimize} & \sum_{(i,j) \in E} d_{ij} x_{ij} \\
-      \text{subject to} & \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V \\
-                        & \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V  \\
-                        & x_{ij} \in \{ 0, 1 \}
-      \end{array}
-      \]</p>
+      <p>
+        So finally the integer program formulation becomes
+        \[
+        \begin{array}{ll}
+        \text{minimize} & \sum_{(i,j) \in E} d_{ij} x_{ij} \\
+        \text{subject to} & \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V \\
+                          & \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V  \\
+                          & x_{ij} \in \{ 0, 1 \}
+        \end{array}
+        \]
+      </p>
 
-      <p> We note, however, that since there is an exponential number of subsets of the nodes $V$, there will
-      be an exponential number of constraints of the type $\sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1$.
-      We therefore add these as <em>lazy constraints</em>. Lazy constraints are inactive until a
-      feasible solution is found. So for our example, Gurobi will first find a feasible solution without the subtour constraints.
-      If the computed tour has a length of $n$ then the problem is solved. Otherwise, if there is a
-      subtour, we add in a constraint corresponding to the shortest subtour in the graph and continue solving the problem. This
-      process then continues until a tour of length $n$ has been found.</p>
+      <p>
+        We note, however, that since there is an exponential number of
+        subsets of the nodes $V$, there will be an exponential number of
+        constraints of the type $\sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1$.
+        We therefore add these as <em>lazy constraints</em>. Lazy constraints
+        are inactive until a feasible solution is found. So for our example,
+        Gurobi will first find a feasible solution without the subtour constraints.
+        If the computed tour has a length of $n$ then the problem is solved.
+        Otherwise, if there is a subtour, we add in a constraint corresponding
+        to the shortest subtour in the graph and continue solving the problem.
+        This process then continues until a tour of length $n$ has been found.
+      </p>
+
     </div>
 
     <div class="section" id="implementation">

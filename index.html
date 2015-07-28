@@ -334,7 +334,7 @@ text {
         We therefore add these as <em>lazy constraints</em>. Lazy constraints
         are inactive until a feasible solution is found. So for our example,
         Gurobi will first find a feasible solution without the subtour constraints.
-        If the computed tour has a length of $n$ then the problem is solved.
+        If the computed tour is of length $n$ then the problem is solved.
         Otherwise, if there is a subtour, we add in a constraint corresponding
         to the shortest subtour in the graph and continue solving the problem.
         This process then continues until a tour of length $n$ has been found.
@@ -451,7 +451,15 @@ text {
     </div>
     <div class="section" id="demo">
       <h2><a href="#demo" name="demo">Live Demo</a></h2>
-      Click on cities (or anywhere on the screen) to add them to the tour, and then press "Compute Tour".
+      <p>
+        The cities which are part of the tour have been highlighted: New York,
+        Houston, San Francisco, Seattle, Minneapolis and Denver. Click "Compute
+        Tour" to find the optimal tour using Gurobi.
+      </p>
+      <p>
+        You can hover over cities to show their names and click to add and remove
+        them from the tour.
+      </p>
       <div id="demoarea">
       </div>
       <button class="pure-button" onclick="compute()">Compute Tour</button>
@@ -719,9 +727,9 @@ function serverResponse(error, data) {
                          .enter()
                          .append("line");
 
-        lines.style("stroke", "orange")
+        lines.style("stroke", "purple")
              .style("opacity", 0.5)
-             .style("stroke-width", 2)
+             .style("stroke-width", 3)
               .attr("x1", function(d,i) {
                 var node1 = nodes[links[i][0]];
                 var x1 = node1[0]

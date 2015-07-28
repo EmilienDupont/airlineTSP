@@ -8,7 +8,6 @@
                       TeX: { equationNumbers: {autoNumber: "AMS"} },
                       "HTML-CSS": { showMathMenu: false,
                                     scale: 90 }
-
                      });
 </script>
 <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/pure-min.css">
@@ -149,47 +148,97 @@ text {
         <subtitle>with integer programming and Gurobi</subtitle>
     </div>
 
+    <p>
+      In this example we'll solve the Travelling Salesman Problem (TSP).
+    </p>
+
+    <p>
+      We'll construct a mathematical model of the problem,
+      implement this model in Gurobi's Python interface, and compute and
+      visualize an optimal solution.
+    </p>
+
+    <p>
+      Although your own business may not involve travelling salesmen, the
+      same basic techniques used in this example can be used for many other
+      applications like vehicle rounting, circuit design and DNA sequencing.
+    </p>
+
     <div class="section" id="problem">
       <h2><a href="#problem" name="problem">Problem Description</a></h2>
-      Problem description goes here
-      <p> Example of TSP problem </p>
-      <p> This also provides an example of the use of lazy constraints in Gurobi</p>
+
+      <p>
+        The Travelling Salesman Problem (TSP) is a classic problem in
+        combinatorial optimization. It was first formulated as an integer
+        program by
+        <a href = "http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.134.9319&rep=rep1&type=pdf">
+        Dantzig, Fulkerson and Johnson</a> in 1954.
+      </p>
+
+      <p>
+        In this example, we consider a salesman travelling in the US.
+        The salesman starts in New York and has to visit a set of cities
+        on a business trip before returning home. The problem then
+        consists of finding the shortest tour which visits every airport
+        on the itinerary.
+      </p>
+
+      <p>
+        We will formulate this problem as an integer program and implement
+        it in Gurobi. The implementation will also demonstrate the use of
+        <em>lazy constraints</em> in Gurobi.
+      </p>
     </div>
     <div class="section" id="model">
       <h2><a href="#model" name="model">Mathematical Model</a></h2>
 
-      <p>We let the $n$ selected cities be the set of vertices $V$ of a graph. The set of edges
-      $E$ of the graph corresponds to the different connections between each city. Since we can
-      travel from any city to another, the graph is complete i.e. there is an edge between
-      every pair of nodes. With each of these edges we associate a binary variable
-      \[
-      x_{ij} = \left\{\begin{array}{ll}
-             1 & \text{if edge $(i,j) \in E$ is in tour }\\
-             0 & \mathrm{otherwise}
-            \end{array}\right.
-      \]</p>
-
-      <p> We want to minimize the total distance travelled through the tour. Therefore, we calculate
-      the Euclidean distance between each pair of nodes. We denote this distance $d_{ij}$ for nodes
-      $i$ and $j$. The total distance travelled is then the sum of the distances of the edges included
-      in the tour, i.e.
-      \[
-      \text{length of tour} = \sum_{(i,j) \in E} d_{ij} x_{ij}
-      \]
+      <p>
+        We let the $n$ selected cities in the salesmans tour be the set
+        of vertices $V$ of a graph. The set of edges $E$ of the graph
+        corresponds to the different connections between each city. Since
+        we can travel from any city to another, the graph is complete i.e.
+        there is an edge between every pair of nodes. With each of these
+        edges we associate a binary variable
+        \[
+        x_{ij} = \left\{\begin{array}{ll}
+               1 & \text{if edge $(i,j) \in E$ is in tour }\\
+               0 & \mathrm{otherwise}
+              \end{array}\right.
+        \]
       </p>
 
-      <p> Since we are computing a flight tour we should only pass through each city once. Therefore,
-      for each node in the graph we should have exactly one incoming edge and one outgoing edge.
-      In other words, for every node $i$ exactly two of $x_{ij}$ binary variables should be equal
-      to 1. We write this as
-      \[
-      \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V
-      \]
+      <p>
+        We want to minimize the total distance travelled through the tour.
+        Therefore, we calculate the Euclidean distance between each pair of
+        nodes, i.e. between each airport. We denote this distance $d_{ij}$
+        for nodes $i$ and $j$. The total distance travelled is then the sum
+        of the distances of the edges included in the tour, i.e.
+        \[
+        \text{length of tour} = \sum_{(i,j) \in E} d_{ij} x_{ij}
+        \]
       </p>
 
-      <p> Solving the problem at this point would yield tours of the cities, but it may not yield
-      a single tour. For example, figure ?? (add a figure here with 2 cycles) shows a solution to the problem as we have formulated is so
-      far: each node has exactly two edges indcident on it. We therefore need to add an extra constraint.</p>
+      <p>
+        Since we are computing a flight tour we should only pass through
+        each city once. Therefore, for each node in the graph we should
+        have exactly one incoming edge and one outgoing edge. In other words,
+        for every node $i$ exactly two of $x_{ij}$ binary variables should
+        be equal to 1. We write this as
+        \[
+        \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V
+        \]
+        For the salesman, this constraint means that, for every city in the
+        tour, he should have exactly one incoming flight and one outgoing
+        flight.
+      </p>
+
+      <p>
+        Solving the problem at this point would yield tours of the cities,
+        but it may not yield a single tour. For example, Fig. 1 shows a
+        solution to the problem as we have formulated is so far: each node
+        has exactly two edges indcident on it. We therefore need to add an
+        extra constraint.
+      </p>
 
       <p> To eliminate the subtours we can add the following constraint. For each proper subset $S$ of the set of
       cities $V$, the number of edges between the nodes of $S$ must be at most $\left\vert{S}\right\vert - 1$.

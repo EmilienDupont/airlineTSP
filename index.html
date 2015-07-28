@@ -483,6 +483,7 @@ var voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]]);
 // G objects for graphics
 var mapG = svg.append("g");
 var labelG = svg.append("g");
+var lineG = svg.append("g");
 var pointsG = svg.append("g");
 var selectG = svg.append("g");
 var voronoiG = svg.append("g");
@@ -618,6 +619,8 @@ function mouseout() {
 }
 
 function mousedown() {
+  lineG.selectAll("line").remove("line");
+
   var id = d3.select(this).attr("id");
   id = parseInt(id);
   console.log('id', id);
@@ -679,6 +682,10 @@ var circles = pointsG.selectAll("circle")
 
 function compute() {
   console.log('vertices', nodes);
+  if (nodes.length < 3) {
+    alert("At least 3 cities are required to compute a tour. Add more!")
+    return;
+  }
   d3.json('/airlineTSP')
     .header('Content-Type', 'application/json')
     .post(JSON.stringify({'vertices': nodes}), serverResponse);
@@ -705,13 +712,12 @@ function serverResponse(error, data) {
         console.log('links', links);
 
         // Draw lines between points
-        var lines = svg.selectAll("line")
-                        .remove()
+        lineG.selectAll("line").remove("line");
 
-        var lines = svg.selectAll("line")
-                        .data(links)
-                        .enter()
-                        .append("line");
+        var lines = lineG.selectAll("line")
+                         .data(links)
+                         .enter()
+                         .append("line");
 
         lines.style("stroke", "orange")
              .style("opacity", 0.5)

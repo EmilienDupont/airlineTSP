@@ -10,110 +10,8 @@
                                     scale: 90 }
                      });
 </script>
-<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/pure-min.css">
+<link rel="stylesheet" href="http://examples.gurobi.com/base.css">
 <style>
-
-@import url(http://fonts.googleapis.com/css?family=PT+Serif|PT+Serif:b|PT+Serif:i|PT+Sans|PT+Sans:b);
-@import url(http://fonts.googleapis.com/css?family=Lato);
-html {
-   min-width: 1040px;
-}
-
-body {
-   background: #fcfcfa;
-   color: #333;
-   font-family: "PT Serif", serif;
-   /*margin: 0 1em 4em auto;*/
-   position: relative;
-   width: 960px;
-   left: 13em;
-}
-
-h1, h2, h3, h4 { font-family: "Lato", "PT Serif", serif; color: #000; text-rendering: optimizeLegibility; }
-
-h1 {
-  font-size: 64px;
-  line-height: 73px;
-  font-weight: 900;
-  margin-top: 0.67em;
-  margin-right: 0;
-  margin-bottom: 0;
-  margin-left: 0;
-}
-
-h2 {
-   margin-top: 2em;
-}
-
-subtitle {
-   display:block;
-   font-family: "PT Serif", serif;
-   font-size: 32px;
-   font-style: italic;
-   font-weight: 100;
-}
-
-p {
-  line-height: 150%;
-  width: 720px;
-}
-
-a {
-  color: steelblue;
-  cursor: auto;
-}
-
-a:not(:hover) {
-   text-decoration: none;
-}
-
-pre {
-   border-left: solid 2px #ccc;
-   padding-left: 18px;
-   margin: 2em 0 2em -20px;
-}
-
-aside {
-   font-size: small;
-   right: 0;
-   position: absolute;
-   width: 180px;
-}
-
-#nav {
-        left: 5px;
-        font-family: "Lato", serif;
-        font-weight: 700;
-        list-style: none;
-        margin: 0;
-        position: fixed;
-        top: 10px;
-        box-sizing: border-box;
-}
-
-
-#nav li {
-        margin-bottom: 0px;
-}
-
-#nav a {
-        color: #333;
-        display: block;
-        font-size: 14px;
-        border-left: 3px solid #fcfcfa;
-        padding: 5px 10px;
-        text-decoration: none;
-}
-
-#nav a:hover {
-   border-left: 3px solid steelblue;
-}
-
-#nav .current a {
-   border-left: 3px solid steelblue;
-}
-
-
 .subunit-label {
   fill: #777;
   fill-opacity: .5;
@@ -142,8 +40,8 @@ text {
     <li><a href="#implementation">Implementation</a></li>
     <li><a href="#demo">Live Demo</a></li>
   </ul>
-  <div id="container">
-    <div class="section" id="intro">
+  <div id="example_container">
+    <div class="example_section" id="intro">
       <h1>The Travelling Salesman Problem</h1>
         <subtitle>with integer programming and Gurobi</subtitle>
     </div>
@@ -164,7 +62,7 @@ text {
       applications like vehicle rounting, circuit design and DNA sequencing.
     </p>
 
-    <div class="section" id="problem">
+    <div class="example_section" id="problem">
       <h2><a href="#problem" name="problem">Problem Description</a></h2>
 
       <p>
@@ -189,7 +87,7 @@ text {
         <em>lazy constraints</em> in Gurobi.
       </p>
     </div>
-    <div class="section" id="model">
+    <div class="example_section" id="model">
       <h2><a href="#model" name="model">Mathematical Model</a></h2>
 
       <p>
@@ -342,114 +240,114 @@ text {
 
     </div>
 
-    <div class="section" id="implementation">
+    <div class="example_section" id="implementation">
       <h2><a href="#implementation" name="implementation">Implementation</a></h2>
       <p>Below is the full implementation of the model (and the associated data) in
         Gurobi's Python interface:
       </p>
-      <pre>
-        import math
-        import random
-        from gurobipy import *
+<examplecode>
+import math
+import random
+from gurobipy import *
 
 
-        # Callback - use lazy constraints to eliminate sub-tours
+# Callback - use lazy constraints to eliminate sub-tours
 
-        def subtourelim(model, where):
-            if where == GRB.callback.MIPSOL:
-                selected = []
-                # make a list of edges selected in the solution
-                for i in range(n):
-                    sol = model.cbGetSolution([model._vars[i,j] for j in range(n)])
-                    selected += [(i,j) for j in range(n) if sol[j] > 0.5]
-                # find the shortest cycle in the selected edge list
-                tour = subtour(selected)
-                if len(tour) < n:
-                    # add a subtour elimination constraint
-                    expr = 0
-                    for i in range(len(tour)):
-                        for j in range(i+1, len(tour)):
-                            expr += model._vars[tour[i], tour[j]]
-                    model.cbLazy(expr <= len(tour)-1)
-
-
-        # Euclidean distance between two points
-
-        def distance(points, i, j):
-            dx = points[i][0] - points[j][0]
-            dy = points[i][1] - points[j][1]
-            return math.sqrt(dx*dx + dy*dy)
+def subtourelim(model, where):
+  if where == GRB.callback.MIPSOL:
+    selected = []
+    # make a list of edges selected in the solution
+    for i in range(n):
+      sol = model.cbGetSolution([model._vars[i,j] for j in range(n)])
+      selected += [(i,j) for j in range(n) if sol[j] &gt; 0.5]
+    # find the shortest cycle in the selected edge list
+    tour = subtour(selected)
+    if len(tour) &lt; n:
+      # add a subtour elimination constraint
+      expr = 0
+      for i in range(len(tour)):
+        for j in range(i+1, len(tour)):
+          expr += model._vars[tour[i], tour[j]]
+      model.cbLazy(expr &lt;= len(tour)-1)
 
 
-        # Given a list of edges, finds the shortest subtour
+# Euclidean distance between two points
 
-        def subtour(edges):
-            visited = [False]*n
-            cycles = []
-            lengths = []
-            selected = [[] for i in range(n)]
-            for x,y in edges:
-                selected[x].append(y)
-            while True:
-                current = visited.index(False)
-                thiscycle = [current]
-                while True:
-                    visited[current] = True
-                    neighbors = [x for x in selected[current] if not visited[x]]
-                    if len(neighbors) == 0:
-                        break
-                    current = neighbors[0]
-                    thiscycle.append(current)
-                cycles.append(thiscycle)
-                lengths.append(len(thiscycle))
-                if sum(lengths) == n:
-                    break
-            return cycles[lengths.index(min(lengths))]
-
-        n = 50
-
-        # Create n random points
-
-        random.seed(1)
-        points = []
-        for i in range(n):
-            points.append((random.randint(0,100),random.randint(0,100)))
-
-        m = Model()
+def distance(points, i, j):
+  dx = points[i][0] - points[j][0]
+  dy = points[i][1] - points[j][1]
+  return math.sqrt(dx*dx + dy*dy)
 
 
-        # Create variables
+# Given a list of edges, finds the shortest subtour
 
-        vars = {}
-        for i in range(n):
-            for j in range(i+1):
-                vars[i,j] = m.addVar(obj=distance(points, i, j), vtype=GRB.BINARY,
-                                     name='e'+str(i)+'_'+str(j))
-                vars[j,i] = vars[i,j]
-        m.update()
+def subtour(edges):
+  visited = [False]*n
+  cycles = []
+  lengths = []
+  selected = [[] for i in range(n)]
+  for x,y in edges:
+    selected[x].append(y)
+  while True:
+    current = visited.index(False)
+    thiscycle = [current]
+    while True:
+      visited[current] = True
+      neighbors = [x for x in selected[current] if not visited[x]]
+      if len(neighbors) == 0:
+        break
+      current = neighbors[0]
+      thiscycle.append(current)
+    cycles.append(thiscycle)
+    lengths.append(len(thiscycle))
+    if sum(lengths) == n:
+      break
+  return cycles[lengths.index(min(lengths))]
+
+n = 50
+
+# Create n random points
+
+random.seed(1)
+points = []
+for i in range(n):
+  points.append((random.randint(0,100),random.randint(0,100)))
+
+m = Model()
 
 
-        # Add degree-2 constraint, and forbid loops
+# Create variables
 
-        for i in range(n):
-            m.addConstr(quicksum(vars[i,j] for j in range(n)) == 2)
-            vars[i,i].ub = 0
-        m.update()
+vars = {}
+for i in range(n):
+   for j in range(i+1):
+     vars[i,j] = m.addVar(obj=distance(points, i, j), vtype=GRB.BINARY,
+                          name='e'+str(i)+'_'+str(j))
+     vars[j,i] = vars[i,j]
+   m.update()
 
 
-        # Optimize model
+# Add degree-2 constraint, and forbid loops
 
-        m._vars = vars
-        m.params.LazyConstraints = 1
-        m.optimize(subtourelim)
+for i in range(n):
+  m.addConstr(quicksum(vars[i,j] for j in range(n)) == 2)
+  vars[i,i].ub = 0
 
-        solution = m.getAttr('x', vars)
-        selected = [(i,j) for i in range(n) for j in range(n) if solution[i,j] > 0.5]
-        assert len(subtour(selected)) == n
+m.update()
 
-      </pre>
+
+# Optimize model
+
+m._vars = vars
+m.params.LazyConstraints = 1
+m.optimize(subtourelim)
+
+solution = m.getAttr('x', vars)
+selected = [(i,j) for i in range(n) for j in range(n) if solution[i,j] &gt; 0.5]
+assert len(subtour(selected)) == n
+</examplecode>
     </div>
-    <div class="section" id="demo">
+    <div class="example_section" id="demo">
       <h2><a href="#demo" name="demo">Live Demo</a></h2>
       <p>
         The cities which are part of the tour have been highlighted: New York,
@@ -694,7 +592,7 @@ function compute() {
     alert("At least 3 cities are required to compute a tour. Add more!")
     return;
   }
-  d3.json('/airlineTSP')
+  d3.json('airlineTSP.py')
     .header('Content-Type', 'application/json')
     .post(JSON.stringify({'vertices': nodes}), serverResponse);
 }

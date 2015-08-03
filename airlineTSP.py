@@ -68,18 +68,15 @@ def subtour(edges, n):
     return cycles[lengths.index(min(lengths))]
 
 
-def optimize(points):
-    print points
-    
+def optimize(points, output=False):
     n = len(points)
-    
-    print n
-    
     m = Model()
-    
-    
+
+    if not output:
+        m.params.OutputFlag = 0
+
     # Create variables
-    
+
     vars = {}
     for i in range(n):
         for j in range(i+1):
@@ -87,38 +84,50 @@ def optimize(points):
                                  name='e'+str(i)+'_'+str(j))
             vars[j,i] = vars[i,j]
     m.update()
-    
-    
+
+
     # Add degree-2 constraint, and forbid loops
-    
+
     for i in range(n):
         m.addConstr(quicksum(vars[i,j] for j in range(n)) == 2)
         vars[i,i].ub = 0
     m.update()
-    
-    
+
+
     # Optimize model
-    
+
     m._vars = vars
     m._n = n
     m.params.LazyConstraints = 1
     m.optimize(subtourelim)
-    
+
     solution = m.getAttr('x', vars)
     selected = [(i,j) for i in range(n) for j in range(n) if solution[i,j] > 0.5]
-    
-    
-    
-    print('')
-    print('Optimal tour: %s' % str(subtour(selected,n)))
-    print('Optimal cost: %g' % m.objVal)
-    print('')
-    
+
+
+
+    #print('')
+    #print('Optimal tour: %s' % str(subtour(selected,n)))
+    #print('Optimal cost: %g' % m.objVal)
+    #print('')
+
     assert len(subtour(selected,n)) == n
-    
+
     return subtour(selected,n)
 
 #points = [(100,20), (50,75), (60,80)]
 points = [[28, 100], [152, 190], [400, 50], [138, 213.875], [192, 213.875], [325, 151.875], [264, 281.875], [111, 304.875], [84, 226.875], [160, 89.875], [264, 155.875]]
 [[28, 100], [152, 190], [400, 50], [138, 213.875], [192, 213.875], [325, 151.875], [264, 281.875], [111, 304.875], [84, 226.875], [160, 89.875], [264, 155.875]]
-print (optimize(points))
+
+
+def handleoptimize(jsdict):
+    if 'vertices' in jsdict:
+        tour = optimize(jsdict['vertices'])
+        return {'tour': tour }
+
+if __name__ == '__main__':
+    import json
+    jsdict = json.load(sys.stdin)
+    jsdict = handleoptimize(jsdict)
+    print 'Content-Type: application/json\n\n'
+    print json.dumps(jsdict)

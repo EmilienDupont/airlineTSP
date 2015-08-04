@@ -14,7 +14,6 @@ if 'PORT' in os.environ:
 else:
     PORT = 8000
 
-
 import airlineTSP
 
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):

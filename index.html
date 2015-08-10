@@ -363,6 +363,27 @@ assert len(subtour(selected)) == n
       <button class="pure-button" onclick="compute()">Compute Tour</button>
     </div>
 
+    <p>
+      <button class="pure-button" onclick="toggle_div()">Gurobi Log</button>
+    </p>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    <script>
+      function toggle_div() {
+        var logfile = d3.select('#logfile');
+        if (logfile.style("display") === "none") {
+          logfile.style("display", "block");
+        } else {
+          logfile.style("display", "none");
+        }
+
+      }
+    </script>
+
+    <examplecode id=logfile>
+    </examplecode>
+
     <div style="min-height:100px"></div>
 <!--[if gt IE 8]><!--><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script><!--<![endif]-->
 <script src="http://davist11.github.io/jQuery-One-Page-Nav/jquery.nav.js"></script>
@@ -374,7 +395,11 @@ assert len(subtour(selected)) == n
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/1.2.7/spin.min.js"></script>
 <script>
+
+// Hide Log File intially
+d3.select('#logfile').style("display", "none");
 
 var width = 960,
     height = 600;
@@ -603,8 +628,13 @@ function serverResponse(error, data) {
    console.log('data', data);
    if (!error) {
       if ('tour' in data) {
-        var tour = data.tour;
+        var solution = data.tour;
+        var tour = solution[0];
         console.log('tour', tour);
+
+        var logMsg = solution[1]; // Log message to display
+
+        d3.select('#logfile').html(logMsg);
 
         // Get list of edges of tour
         var src = tour[0];

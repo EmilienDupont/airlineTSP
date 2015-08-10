@@ -10,12 +10,16 @@
 # adds new constraints to cut them off.
 
 import math
+import StringIO
 from gurobipy import *
 
 
 # Callback - use lazy constraints to eliminate sub-tours
 
-def subtourelim(model, where):  # DO WE NEED TO ADD n HERE? AND HOW?
+def subtourelim(model, where):
+    if where == GRB.callback.MESSAGE:
+        print >>model.__output, model.cbGet(GRB.callback.MSG_STRING),
+
     if where == GRB.callback.MIPSOL:
         selected = []
         n = model._n
@@ -99,23 +103,19 @@ def optimize(points, output=False):
     m._vars = vars
     m._n = n
     m.params.LazyConstraints = 1
+
+    output = StringIO.StringIO()
+    m.__output = output
+
     m.optimize(subtourelim)
 
     solution = m.getAttr('x', vars)
     selected = [(i,j) for i in range(n) for j in range(n) if solution[i,j] > 0.5]
 
-
-
-    #print('')
-    #print('Optimal tour: %s' % str(subtour(selected,n)))
-    #print('Optimal cost: %g' % m.objVal)
-    #print('')
-
     assert len(subtour(selected,n)) == n
 
-    return subtour(selected,n)
+    return [subtour(selected,n), output.getvalue()]
 
-#points = [(100,20), (50,75), (60,80)]
 points = [[28, 100], [152, 190], [400, 50], [138, 213.875], [192, 213.875], [325, 151.875], [264, 281.875], [111, 304.875], [84, 226.875], [160, 89.875], [264, 155.875]]
 [[28, 100], [152, 190], [400, 50], [138, 213.875], [192, 213.875], [325, 151.875], [264, 281.875], [111, 304.875], [84, 226.875], [160, 89.875], [264, 155.875]]
 

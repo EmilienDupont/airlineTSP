@@ -47,7 +47,7 @@ text {
     </div>
 
     <p>
-      In this example we'll solve the Travelling Salesman Problem (TSP).
+      In this example we'll solve the Travelling Salesman Problem.
     </p>
 
     <p>
@@ -232,7 +232,7 @@ text {
         We therefore add these as <em>lazy constraints</em>. Lazy constraints
         are inactive until a feasible solution is found. So for our example,
         Gurobi will first find a feasible solution without the subtour constraints.
-        If the computed tour is of length $n$ then the problem is solved.
+        If the computed tour is of length $n$, then the problem is solved.
         Otherwise, if there is a subtour, we add in a constraint corresponding
         to the shortest subtour in the graph and continue solving the problem.
         This process then continues until a tour of length $n$ has been found.

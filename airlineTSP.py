@@ -79,6 +79,8 @@ def optimize(points, output=False):
     if not output:
         m.params.OutputFlag = 0
 
+    m.setParam('TimeLimit', 10)
+
     # Create variables
 
     vars = {}
@@ -108,6 +110,9 @@ def optimize(points, output=False):
     m.__output = output
 
     m.optimize(subtourelim)
+
+    if (m.status != 2):
+        return ["error"]
 
     solution = m.getAttr('x', vars)
     selected = [(i,j) for i in range(n) for j in range(n) if solution[i,j] > 0.5]

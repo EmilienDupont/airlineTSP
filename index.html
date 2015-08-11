@@ -629,6 +629,10 @@ function serverResponse(error, data) {
    if (!error) {
       if ('tour' in data) {
         var solution = data.tour;
+        if (solution[0] === "error") {
+          alert("10 second solve time limit exceeded.");
+          return;
+        }
         var tour = solution[0];
         console.log('tour', tour);
 

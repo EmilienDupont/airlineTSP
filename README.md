@@ -16,14 +16,6 @@ An example of using Gurobi to compute a minimal weight Hamiltonian cycle (Travel
 
 4. Click "Compute Tour" to find the minimal weight tour.
 
-# Performing an optimization
-
-To just solve for the tour (without running a web server) do:
-
-```
-make test
-```
-
 ## Sources
 
 The [d3][3] code for the map is based on Mike Bostock's ["Let's Make a Map"][1] [block][2].

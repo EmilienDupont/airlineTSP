@@ -104,57 +104,63 @@ text {
       <h2><a href="#model" name="model">Mathematical Model</a></h2>
 
       <p>
-        We let the $n$ selected cities in the salesman's tour be the set
-        of vertices $V$ of a graph. The set of edges $E$ of the graph
-        corresponds to the different connections between each city. Since
-        we can travel from any city to another, the graph is complete i.e.
-        there is an edge between every pair of nodes. With each of these
-        edges we associate a binary variable
+        We let the $n$ selected cities in the salesman's tour be the
+        set of vertices $V$ of a graph. The set of edges $E$ of the
+        graph corresponds to the different connections between each
+        city. Since we can travel from any city to another, the graph
+        is complete. That is, there is an edge between every pair of
+        nodes. For each edge in the the graph we associate a binary
+        variable
         \[
         x_{ij} = \left\{\begin{array}{ll}
                1 & \text{if edge $(i,j) \in E$ is in tour }\\
-               0 & \mathrm{otherwise}
+               0 & \mathrm{otherwise.}
               \end{array}\right.
         \]
+        Since the edges are undirected, we have that $x_{ij} = x_{ji}$.
       </p>
 
       <p>
-        We want to minimize the total distance travelled through the tour.
-        Therefore, we calculate the Euclidean distance between each pair of
-        nodes, i.e. between each airport. We denote this distance $d_{ij}$
-        for nodes $i$ and $j$. The total distance travelled is then the sum
-        of the distances of the edges included in the tour, i.e.
+        We want to minimize the total distance travelled during the
+        tour.  Therefore, we calculate the distance $d_{ij}$ between
+        each pair of nodes $i$ and $j$. The total distance travelled
+        is then the sum of the distances of the edges included in the
+        tour
         \[
-        \text{length of tour} = \sum_{(i,j) \in E} d_{ij} x_{ij}
+        \text{distance travelled} = \sum_{(i,j) \in E} d_{ij} x_{ij}.
         \]
       </p>
 
       <p>
-        Since we are computing a flight tour we should only pass through
-        each city once. Therefore, for each node in the graph we should
-        have exactly one incoming edge and one outgoing edge. In other words,
-        for every node $i$ exactly two of the $x_{ij}$ binary variables
-        should be equal to 1. We write this as
+        The tour should only pass through each city once. Therefore,
+        each node in the graph should have exactly one incoming
+        edge and one outgoing edge. In other words, for every node $i$
+        exactly two of the $x_{ij}$ binary variables should be equal
+        to 1. We write this constraint as
+
         \[
-        \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V
+        \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V.
         \]
+
         For the salesman, this constraint means that, for every city in the
         tour, he should have exactly one incoming flight and one outgoing
         flight.
       </p>
 
       <p>
-        Solving the problem at this point would yield tours of the cities,
-        but it may not yield a single tour. For example, Fig. 1 shows a
-        solution to the problem as we have formulated it so far: each node
-        has exactly two edges indcident on it. We therefore need to add an
-        extra constraint.
+        With just this constraint on the number of edges in the tour
+        entering and exit each node, we may produce solutions that are
+        not connected tours. For example, the figure below shows a graph
+        with 6 nodes and two disconnected subtours. The first subtour
+        goes through nodes 1, 2, and 3, while the second subtour goes
+        through nodes 4, 5, 6, 7. Note that in this solution each node
+        has exactly two edges in the tour incident to it. But there is
+        no path for the salesman to travel between subtour. So we must
+        add extra constraints to our model to eliminate these
+        solutions.
       </p>
 
-      <figure id="subtourdemo">
-      <aside>
-        Fig. 1: An example of subtours
-      </aside>
+      <div id="subtourdemo"></div>
 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
       <script>

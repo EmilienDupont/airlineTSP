@@ -76,7 +76,7 @@ text {
     </p>
 
     <div class="example_section" id="problem">
-      <h2><a href="#problem" name="problem">Problem Description</a></h2>
+      <h2><a name="problem">Problem Description</a></h2>
 
       <p>
         The Travelling Salesman Problem (TSP) is a classic problem in
@@ -90,7 +90,7 @@ text {
         In this example, we consider a salesman travelling in the US.
         The salesman starts in New York and has to visit a set of cities
         on a business trip before returning home. The problem then
-        consists of finding the shortest tour which visits every airport
+        consists of finding the shortest tour which visits every city
         on the itinerary.
       </p>
 
@@ -101,7 +101,7 @@ text {
       </p>
     </div>
     <div class="example_section" id="model">
-      <h2><a href="#model" name="model">Mathematical Model</a></h2>
+      <h2><a name="model">Mathematical Model</a></h2>
 
       <p>
         We let the $n$ selected cities in the salesman's tour be the
@@ -117,7 +117,8 @@ text {
                0 & \mathrm{otherwise.}
               \end{array}\right.
         \]
-        Since the edges are undirected, we have that $x_{ij} = x_{ji}$.
+        Since the edges are undirected, we have that $x_{ij} = x_{ji}$,
+        and it suffices to only include edges with $i &lt; j$ in the model.
       </p>
 
       <p>
@@ -142,9 +143,8 @@ text {
         \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V.
         \]
 
-        For the salesman, this constraint means that, for every city in the
-        tour, he should have exactly one incoming flight and one outgoing
-        flight.
+        This constraint means that the saleman should enter
+        and leave each city exactly once.
       </p>
 
       <p>
@@ -153,7 +153,7 @@ text {
         not connected tours. For example, the figure below shows a graph
         with 6 nodes and two disconnected subtours. The first subtour
         goes through nodes 1, 2, and 3, while the second subtour goes
-        through nodes 4, 5, 6, 7. Note that in this solution each node
+        through nodes 4, 5, 6, and 7. Note that in this solution each node
         has exactly two edges in the tour incident to it. But there is
         no path for the salesman to travel between subtour. So we must
         add extra constraints to our model to eliminate these
@@ -220,47 +220,64 @@ text {
       </script>
 
       <p>
-        To eliminate the subtours we can add the following constraint.
-        For each proper subset $S$ of the set of cities $V$, the number of
-        edges between the nodes of $S$ must be at most $\left\vert{S}\right\vert - 1$.
-        Indeed if the number of edges were equal to $S$ then we could form a
-        subtour. For example, in Fig. 1 the subset of nodes $\{1,2,3\}$ has 3
-        edges. Therefore, for each proper subset $S$ of the nodes $V$ we
-        add the constraint
+        To eliminate the subtours we add the following constraints:
         \[
-        \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V
+        \sum_{i,j \in S, \, i \neq j} x_{ij} \leq \left\vert{S}\right\vert - 1, \quad \forall S \subset V, S \ne \emptyset
         \]
+        These constraints require that for
+        each proper (nonempty) subset $S$ of the set of cities $V$,
+        the number of edges between the nodes of $S$ must be at most
+        $\left\vert{S}\right\vert - 1$.
+      </p>
+
+      <p>
+        Indeed if the number of edges were equal to $S$, it would be
+        possible to form a subtour. For example, in the figure above
+        the subset of nodes $S=\{1,2,3\}$ has 3 edges in the tour: $x_{13} = 1,
+        x_{12} = 1, x_{23} = 1$. So
+        \[
+        \sum_{i,j \in \{1,2,3\}, i \ne j} x_{ij} =  3 > 2  = |\{1, 2, 3\}| - 1
+        \]
+        Thus, the subtour elimination constraint above is violated.
       </p>
 
       <p>
         So finally the integer program formulation becomes
         \[
         \begin{array}{ll}
-        \text{minimize} & \sum_{(i,j) \in E} d_{ij} x_{ij} \\
-        \text{subject to} & \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V \\
-                          & \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V  \\
+        \text{minimize} & {\displaystyle \sum_{(i,j) \in E} d_{ij} x_{ij}} \\
+        \text{subject to} & {\displaystyle \sum_{j \in V} x_{ij}} = 2 \quad \forall i \in V \\
+                          & {\displaystyle \sum_{i,j \in S, \, i \neq j} x_{ij}} \leq  \left\vert{S}\right\vert - 1 \quad \forall S \subset V, S \ne \emptyset  \\
                           & x_{ij} \in \{ 0, 1 \}
         \end{array}
         \]
       </p>
 
-      <p>
-        We note, however, that since there is an exponential number of
-        subsets of the nodes $V$, there will be an exponential number of
-        constraints of the type $\sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1$.
-        We therefore add these as <em>lazy constraints</em>. Lazy constraints
-        are inactive until a feasible solution is found. So for our example,
-        Gurobi will first find a feasible solution without the subtour constraints.
-        If the computed tour is of length $n$, then the problem is solved.
-        Otherwise, if there is a subtour, we add in a constraint corresponding
-        to the shortest subtour in the graph and continue solving the problem.
-        This process then continues until a tour of length $n$ has been found.
+      <p>If the set of cities $V$ is of size $n$, there are $2^n - 2$
+        subsets $S$ of $V$, excluding $S = V$ and $S = \emptyset$. Instead
+        of explicitally including a constraint
+        \[
+        \sum_{i,j \in S, \, i \neq j} x_{ij} \leq  \left\vert{S}\right\vert - 1
+        \]
+        for each $S$. We include above constraints implicitly as <em>lazy constraints</em>.
+        That is, we generate and add these constraints to our model in a lazy fashion.
+      </p>
+
+      <p> Initially we will have no subtour elimination constraints in our model.
+        When Gurobi finds a feasible solution that satisifies the other constraints,
+        we compute the shortest cycle in edges included in the tour so far. If
+        this cycle is of length $n$, then the model is solved. Otherwise, a
+        cycle of length $m &lt; n$ defines a subtour, and a set $S$ with $|S| = m$.
+        We then add the corresponding constraint to eliminate this subtour as
+        a lazy constraint, and Gurobi continues solving this new modified model.
+        This process continues until the shortest cycle is of length $n$, implying
+        that all subtour elimination constraints have been satisfied.
       </p>
 
     </div>
 
     <div class="example_section" id="implementation">
-      <h2><a href="#implementation" name="implementation">Implementation</a></h2>
+      <h2><a name="implementation">Implementation</a></h2>
       <p>Below is the full implementation of the model (and the associated data) in
         Gurobi's Python interface:
       </p>
@@ -367,7 +384,7 @@ assert len(subtour(selected)) == n
 </examplecode>
     </div>
     <div class="example_section" id="demo">
-      <h2><a href="#demo" name="demo">Live Demo</a></h2>
+      <h2><a name="demo">Live Demo</a></h2>
       <p>
         The cities which are part of the tour have been highlighted: New York,
         Houston, San Francisco, Seattle, Minneapolis and Denver. Click "Compute
@@ -405,11 +422,11 @@ assert len(subtour(selected)) == n
 
     <div style="min-height:100px"></div>
 <!--[if gt IE 8]><!--><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script><!--<![endif]-->
-<script src="http://davist11.github.io/jQuery-One-Page-Nav/jquery.nav.js"></script>
+<script src="jquery.nav.js"></script>
 <script>
   $(document).ready(function() {
   console.log('calling onePageNav');
-  $('#nav').onePageNav();
+  $('#nav').onePageNav({scrollOffset:120});
   });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
